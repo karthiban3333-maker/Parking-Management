@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables & secrets (NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+accounts.json
+*.key
+*.pem
+secret*
+secrets/
+
+# Firebase
+.firebase/
+.firebaserc.local
+*.log
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.pdf
+*.docx
+*.zip
+*.tar.gz

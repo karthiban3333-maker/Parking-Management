@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parkline · Lot Operations</title>
+  <link rel="stylesheet" href="static/css/style.css">
+  <style>
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(16, 27, 43, 0.7);
+      backdrop-filter: blur(4px); display: none; align-items: center;
+      justify-content: center; z-index: 1000; padding: 20px;
+    }
+    .modal-card {
+      background: #fff; border-radius: 12px; max-width: 580px; width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden;
+      animation: modalFadeIn 0.25s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tab-view { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <a class="brand" href="#dashboard" data-tab="dashboard">
+      <span class="brand-mark">P</span>
+      <span>PARKLINE<small>LOT OPERATIONS</small></span>
+    </a>
+    <div class="nav-label">WORKSPACE</div>
+    <nav>
+      <a class="active" href="#dashboard" data-tab="dashboard">▦ <span>Overview</span></a>
+      <a href="#map" data-tab="map">▤ <span>Parking map</span></a>
+      <a href="#park" data-tab="park">＋ <span>Park a vehicle</span></a>
+      <a href="#checkout" data-tab="checkout">↗ <span>Checkout</span></a>
+      <a href="#search" data-tab="search">⌕ <span>Search</span></a>
+      <a href="#history" data-tab="history">◷ <span>History</span></a>
+      <a href="#reports" data-tab="reports">▥ <span>Reports</span></a>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="live-dot"></span> Live Cloud Sync · Free Tier
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">PARKING OPERATIONS</span>
+        <h1 id="page-heading">Overview</h1>
+      </div>
+      <button class="button primary" id="btn-topbar-park">＋ Park vehicle</button>
+    </header>
+
+    <!-- Global Alerts -->
+    <div id="alerts-container" class="alerts"></div>
+
+    <!-- TAB 1: OVERVIEW / DASHBOARD -->
+    <div id="view-dashboard" class="tab-view" style="display: block;">
+      <section class="welcome">
+        <div>
+          <span class="eyebrow">FACILITY STATUS</span>
+          <h2>Automated Space Allocation &amp; Tariffs</h2>
+          <p>13 dedicated bays: 5 Bike, 6 Car, and 2 Truck spaces with serverless cloud sync.</p>
+        </div>
+        <a class="welcome-link" href="#map" onclick="switchTab('map'); return false;">
+          View Slot Map <span>→</span>
+        </a>
+      </section>
+
+      <!-- Key Stats Bar -->
+      <section class="stats">
+        <div class="stat-card">
+          <span>TOTAL CAPACITY</span>
+          <strong>13</strong>
+          <small>Spaces total</small>
+        </div>
+        <div class="stat-card">
+          <span>ACTIVE VEHICLES</span>
+          <strong id="stat-occupied">0</strong>
+          <small>Occupied bays</small>
+        </div>
+        <div class="stat-card">
+          <span>AVAILABLE BAYS</span>
+          <strong id="stat-available">13</strong>
+          <small>Ready to allocate</small>
+        </div>
+        <div class="stat-card">
+          <span>TOTAL REVENUE</span>
+          <strong id="stat-revenue">₹0</strong>
+          <small>Completed checkouts</small>
+        </div>
+      </section>
+
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Lot Occupancy</h3>
+                <p>Live allocation by space classification</p>
+              </div>
+            </div>
+            <div class="occupancy">
+              <div class="ring" id="stat-occupancy-ring" style="--percent: 0%;">
+                <div>
+                  <strong id="stat-occupancy-percent">0%</strong>
+                  <span>CAPACITY</span>
+                </div>
+              </div>
+              <div class="legend">
+                <div>
+                  <span class="dot navy"></span>
+                  <b>13</b>
+                  <span>Total parking capacity</span>
+                </div>
+                <div>
+                  <span class="dot green"></span>
+                  <b>3</b>
+                  <span>Vehicle categories</span>
+                </div>
+              </div>
+            </div>
+            <div class="type-grid">
+              <div class="type-item">
+                <span>🏍 Bike Zone</span>
+                <b>5 Slots</b>
+                <small id="type-stat-bike">0 / 5 occupied</small>
+              </div>
+              <div class="type-item">
+                <span>🚗 Car Zone</span>
+                <b>6 Slots</b>
+                <small id="type-stat-car">0 / 6 occupied</small>
+              </div>
+              <div class="type-item">
+                <span>🚛 Truck Zone</span>
+                <b>2 Slots</b>
+                <small id="type-stat-truck">0 / 2 occupied</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Vehicles Table -->
+          <div class="panel table-panel">
+            <div class="panel-head">
+              <div>
+                <h3>Currently Parked Vehicles</h3>
+                <p>Real-time elapsed stay &amp; calculated fee</p>
+              </div>
+              <button class="button subtle small" onclick="switchTab('map')">View Map</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>TICKET</th>
+                    <th>REG NO</th>
+                    <th>OWNER</th>
+                    <th>TYPE</th>
+                    <th>SLOT</th>
+                    <th>ENTRY &amp; TIME</th>
+                    <th>CURRENT FEE</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-active-tbody">
+                  <!-- Injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- Quick Operations -->
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Quick Actions</h3>
+            </div>
+            <a class="action-row" href="#park" onclick="switchTab('park'); return false;">
+              <span class="action-icon">＋</span>
+              <div>
+                <b>Park Incoming Vehicle</b>
+                <small>Issue automated ticket &amp; assign slot</small>
+              </div>
+              <i>→</i>
+            </a>
+            <a class="action-row" href="#checkout" onclick="switchTab('checkout'); return false;">
+              <span class="action-icon amber">↗</span>
+              <div>
+                <b>Process Checkout &amp; Bill</b>
+                <small>Calculate stay duration &amp; release bay</small>
+              </div>
+              <i>→</i>
+            </a>
+            <a class="action-row" href="#search" onclick="switchTab('search'); return false;">
+              <span class="action-icon blue">⌕</span>
+              <div>
+                <b>Search Records</b>
+                <small>Locate by ticket, plate or owner</small>
+              </div>
+              <i>→</i>
+            </a>
+
+            <!-- State Reset Controls -->
+            <div class="demo-actions">
+              <div class="demo-form">
+                <button type="button" class="button subtle small" id="btn-reload-demo">Reload sample data</button>
+                <button type="button" class="button outline small" id="btn-reset-empty">Reset to empty lot</button>
+              </div>
+              <small>Demo data pre-loads 5 parked vehicles and 3 completed checkouts.</small>
+            </div>
+          </div>
+
+          <!-- Tariff Matrix -->
+          <div class="panel rate-panel">
+            <h3>Tariff Structure</h3>
+            <p>10 minutes grace period is free for all vehicles</p>
+            <div class="rate-row">
+              <strong>🏍 Bike</strong>
+              <span>₹10 1st hr · ₹5/addl hr</span>
+              <strong>Cap ₹60</strong>
+            </div>
+            <div class="rate-row">
+              <strong>🚗 Car</strong>
+              <span>₹30 1st hr · ₹20/addl hr</span>
+              <strong>Cap ₹200</strong>
+            </div>
+            <div class="rate-row">
+              <strong>🚛 Truck</strong>
+              <span>₹60 1st hr · ₹40/addl hr</span>
+              <strong>Cap ₹400</strong>
+            </div>
+            <small>Sessions exceeding 10 minutes round up to the next full hour. The daily cap applies once to the stay.</small>
+          </div>
+
+          <!-- Recent Checkouts -->
+          <div class="panel table-panel">
+            <div class="panel-head">
+              <h3>Recent Checkouts</h3>
+              <button class="button subtle small" onclick="switchTab('history')">All History</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>TICKET</th>
+                    <th>REG NO</th>
+                    <th>SLOT</th>
+                    <th>EXIT TIME</th>
+                    <th>MINS</th>
+                    <th>FEE</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-recent-tbody">
+                  <!-- Injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PARKING MAP -->
+    <div id="view-map" class="tab-view">
+      <p class="page-intro">Visual real-time status of all 13 spaces across the facility.</p>
+      <div class="filter-row">
+        <a class="filter-chip selected" href="#" data-filter="All" onclick="setMapFilter('All'); return false;">All Slots (13)</a>
+        <a class="filter-chip" href="#" data-filter="Available" onclick="setMapFilter('Available'); return false;">Available</a>
+        <a class="filter-chip" href="#" data-filter="Occupied" onclick="setMapFilter('Occupied'); return false;">Occupied</a>
+        <a class="filter-chip" href="#" data-filter="Bike" onclick="setMapFilter('Bike'); return false;">Bikes (5)</a>
+        <a class="filter-chip" href="#" data-filter="Car" onclick="setMapFilter('Car'); return false;">Cars (6)</a>
+        <a class="filter-chip" href="#" data-filter="Truck" onclick="setMapFilter('Truck'); return false;">Trucks (2)</a>
+      </div>
+      <div id="map-slots-container">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: PARK A VEHICLE -->
+    <div id="view-park" class="tab-view">
+      <div class="form-layout">
+        <div class="panel form-panel">
+          <div class="panel-head">
+            <h3>Check-in Vehicle</h3>
+            <p>System automatically assigns the first available bay</p>
+          </div>
+          <form id="park-form">
+            <label for="park-regno">Vehicle Registration Number</label>
+            <input type="text" id="park-regno" placeholder="e.g. TN 09 CD 5678" required autocomplete="off">
+
+            <label for="park-owner">Owner / Driver Full Name</label>
+            <input type="text" id="park-owner" placeholder="e.g. Ravi Kumar" required autocomplete="off">
+
+            <label for="park-vtype">Vehicle Classification</label>
+            <select id="park-vtype" required>
+              <option value="Bike">🏍 Bike (B01–B05)</option>
+              <option value="Car" selected>🚗 Car (C01–C06)</option>
+              <option value="Truck">🚛 Truck (T01–T02)</option>
+            </select>
+
+            <button type="submit" class="button primary full">Allocate Space &amp; Issue Ticket</button>
+          </form>
+          <div class="notice">
+            <b>Allocation Policy:</b> Vehicles are strictly assigned to their designated zone. Active duplicate registrations are rejected. Ticket numbers increment monotonically.
+          </div>
+        </div>
+
+        <div>
+          <div class="panel rate-panel">
+            <h3>Applicable Tariff Rules</h3>
+            <p>Calculated on checkout</p>
+            <div class="rate-row">
+              <strong>🏍 Bike</strong>
+              <span>Grace 10m · ₹10 1st hr · ₹5 addl</span>
+              <strong>Cap ₹60</strong>
+            </div>
+            <div class="rate-row">
+              <strong>🚗 Car</strong>
+              <span>Grace 10m · ₹30 1st hr · ₹20 addl</span>
+              <strong>Cap ₹200</strong>
+            </div>
+            <div class="rate-row">
+              <strong>🚛 Truck</strong>
+              <span>Grace 10m · ₹60 1st hr · ₹40 addl</span>
+              <strong>Cap ₹400</strong>
+            </div>
+            <small>A print-ready ticket will be generated upon successful check-in.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: CHECKOUT -->
+    <div id="view-checkout" class="tab-view">
+      <div class="search-bar" style="margin-bottom: 20px;">
+        <label for="checkout-query">Find Active Vehicle:</label>
+        <input type="text" id="checkout-query" placeholder="Enter registration plate, ticket number, or slot (e.g. C01, 1002)..." autocomplete="off">
+        <button class="button primary" id="btn-checkout-search" onclick="previewCheckout(document.getElementById('checkout-query').value)">Look up</button>
+      </div>
+
+      <div id="checkout-empty-box" class="empty">
+        Enter a ticket number, registration number, or slot ID to begin checkout.
+      </div>
+
+      <div id="checkout-preview-box" class="panel bill-preview" style="display: none;">
+        <div class="panel-head">
+          <div>
+            <h3>Parking Bill Preview</h3>
+            <p>Review duration and collected fee before releasing bay</p>
+          </div>
+          <span class="status-pill">PENDING EXIT</span>
+        </div>
+
+        <div class="bill-meta">
+          <div>
+            <small>TICKET NUMBER</small>
+            <b id="checkout-p-ticket">#1001</b>
+          </div>
+          <div>
+            <small>VEHICLE REGISTRATION</small>
+            <b id="checkout-p-regno">TN01AB1234</b>
+          </div>
+          <div>
+            <small>OWNER NAME</small>
+            <b id="checkout-p-owner">Asha Rao</b>
+          </div>
+          <div>
+            <small>ASSIGNED BAY</small>
+            <b id="checkout-p-slot">B01 (Bike)</b>
+          </div>
+          <div>
+            <small>CHECK-IN TIME</small>
+            <b id="checkout-p-entry">18 Oct 2026, 08:00 AM</b>
+          </div>
+          <div>
+            <small>TOTAL STAY DURATION</small>
+            <b id="checkout-p-duration">45 mins</b>
+          </div>
+        </div>
+
+        <div style="padding: 20px 0; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <span class="eyebrow">FINAL COMPUTED CHARGE</span>
+            <div class="fee large" id="checkout-p-fee">₹30</div>
+          </div>
+        </div>
+
+        <form id="checkout-submit-form" class="checkout-confirm">
+          <label>
+            <input type="checkbox" id="checkout-confirm-check" required>
+            <span>I confirm parking fee collection &amp; authorization to release slot.</span>
+          </label>
+          <button type="submit" class="button primary">Complete Checkout &amp; Print Bill</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 5: SEARCH -->
+    <div id="view-search" class="tab-view">
+      <div class="search-bar" style="margin-bottom: 25px;">
+        <label for="global-search-input">Search Query:</label>
+        <input type="text" id="global-search-input" placeholder="Type vehicle plate, driver name, or ticket #..." autocomplete="off">
+      </div>
+
+      <h3 class="section-title">Active Parked Vehicles</h3>
+      <div class="panel table-panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TICKET</th>
+                <th>REG NO</th>
+                <th>OWNER</th>
+                <th>TYPE</th>
+                <th>SLOT</th>
+                <th>ENTRY TIME</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="search-active-tbody">
+              <tr><td colspan="7" class="empty">Type a query above to search.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3 class="section-title">Completed Parking Sessions</h3>
+      <div class="panel table-panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TICKET</th>
+                <th>REG NO</th>
+                <th>OWNER</th>
+                <th>TYPE &amp; SLOT</th>
+                <th>EXIT TIME</th>
+                <th>DURATION</th>
+                <th>FEE</th>
+              </tr>
+            </thead>
+            <tbody id="search-history-tbody">
+              <tr><td colspan="7" class="empty">Type a query above to search.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: HISTORY -->
+    <div id="view-history" class="tab-view">
+      <section class="stats compact" style="margin-bottom: 20px;">
+        <div class="stat-card">
+          <span>COMPLETED TRANSACTIONS</span>
+          <strong id="history-count">0 sessions</strong>
+        </div>
+        <div class="stat-card">
+          <span>TOTAL HISTORICAL REVENUE</span>
+          <strong id="history-revenue">₹0</strong>
+        </div>
+        <button class="button primary export-button" id="btn-export-csv" style="margin-top: 10px;">
+          ⬇ Export History CSV
+        </button>
+      </section>
+
+      <div class="filter-form panel" style="margin-bottom: 20px;">
+        <label>
+          <span>Vehicle Type</span>
+          <select id="history-type-filter">
+            <option value="All">All Types</option>
+            <option value="Bike">Bike</option>
+            <option value="Car">Car</option>
+            <option value="Truck">Truck</option>
+          </select>
+        </label>
+        <label>
+          <span>Filter by Date</span>
+          <input type="date" id="history-date-filter">
+        </label>
+        <label>
+          <span>Search Plate / Owner</span>
+          <input type="text" id="history-search-input" placeholder="Plate number or name...">
+        </label>
+      </div>
+
+      <div class="panel table-panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TICKET</th>
+                <th>REG NO</th>
+                <th>OWNER</th>
+                <th>TYPE</th>
+                <th>SLOT</th>
+                <th>ENTRY TIME</th>
+                <th>EXIT TIME</th>
+                <th>MINS</th>
+                <th>FEE PAID</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: REPORTS -->
+    <div id="view-reports" class="tab-view">
+      <div class="filter-form panel" style="margin-bottom: 20px;">
+        <label>
+          <span>Select Report Date</span>
+          <input type="date" id="reports-date-picker">
+        </label>
+      </div>
+
+      <section class="stats" style="margin-bottom: 20px;">
+        <div class="stat-card">
+          <span>DAY CHECKOUTS</span>
+          <strong id="report-day-count">0</strong>
+          <small>Vehicles exited</small>
+        </div>
+        <div class="stat-card">
+          <span>DAY REVENUE</span>
+          <strong id="report-day-rev">₹0</strong>
+          <small>Total collected</small>
+        </div>
+        <div class="stat-card">
+          <span>BIKE &amp; CARS</span>
+          <strong id="report-bike-count">0</strong>
+          <small id="report-car-count">0</small>
+        </div>
+        <div class="stat-card">
+          <span>HEAVY VEHICLES</span>
+          <strong id="report-truck-count">0</strong>
+          <small>Trucks processed</small>
+        </div>
+      </section>
+
+      <div class="panel table-panel">
+        <div class="panel-head">
+          <h3>Date Itemized Breakdown</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>TICKET</th>
+                <th>REG NO</th>
+                <th>OWNER</th>
+                <th>ZONE &amp; SLOT</th>
+                <th>EXIT TIMESTAMP</th>
+                <th>FEE</th>
+              </tr>
+            </thead>
+            <tbody id="report-day-tbody">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Parkline Parking Management · Firebase Spark Free Deployment · Realtime Cloud Firestore Sync
+    </footer>
+  </main>
+
+  <!-- Ticket Print Modal -->
+  <div id="ticket-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="ticket" style="border: 0; box-shadow: none; margin: 0;">
+        <div class="ticket-head">
+          <span class="brand-mark">P</span>
+          <div>
+            <b>PARKLINE PARKING FACILITY</b>
+            <span>VALID PARKING PASS</span>
+          </div>
+          <span class="status-pill">ACTIVE</span>
+        </div>
+        <div class="ticket-number">
+          <small>OFFICIAL TICKET NUMBER</small>
+          <strong id="ticket-modal-no">#1001</strong>
+        </div>
+        <div class="ticket-grid">
+          <div>
+            <small>REGISTRATION NO</small>
+            <b id="ticket-modal-reg">TN01AB1234</b>
+          </div>
+          <div>
+            <small>OWNER NAME</small>
+            <b id="ticket-modal-owner">Asha Rao</b>
+          </div>
+          <div>
+            <small>CATEGORY</small>
+            <b id="ticket-modal-type">Car</b>
+          </div>
+          <div>
+            <small>ALLOCATED SPACE</small>
+            <b id="ticket-modal-slot">C01</b>
+          </div>
+          <div style="grid-column: span 2;">
+            <small>TIME OF ENTRY</small>
+            <b id="ticket-modal-time">18 Oct 2026, 08:00 AM</b>
+          </div>
+        </div>
+        <div class="notice">
+          <b>Tariff Structure:</b> <span id="ticket-modal-rate">Grace 10m free</span>. Keep this pass safely for exit clearance.
+        </div>
+        <div class="ticket-actions">
+          <button class="button primary" onclick="window.print()">🖨 Print Ticket</button>
+          <button class="button outline" onclick="closeTicketModal()">Done &amp; Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bill Receipt Modal -->
+  <div id="bill-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="ticket" style="border: 0; box-shadow: none; margin: 0;">
+        <div class="ticket-head">
+          <span class="brand-mark">P</span>
+          <div>
+            <b>PARKLINE PARKING FACILITY</b>
+            <span>SETTLEMENT RECEIPT</span>
+          </div>
+          <span class="status-pill" style="background:#e7f6ee; color:#176b48;">PAID</span>
+        </div>
+        <div class="ticket-number">
+          <small>TICKET REFERENCE</small>
+          <strong id="bill-modal-ticket">#1001</strong>
+        </div>
+        <div class="ticket-grid">
+          <div>
+            <small>VEHICLE REGISTRATION</small>
+            <b id="bill-modal-reg">TN01AB1234</b>
+          </div>
+          <div>
+            <small>OWNER NAME</small>
+            <b id="bill-modal-owner">Asha Rao</b>
+          </div>
+          <div>
+            <small>SPACE OCCUPIED</small>
+            <b id="bill-modal-slot">B01 (Bike)</b>
+          </div>
+          <div>
+            <small>TOTAL DURATION</small>
+            <b id="bill-modal-mins">45 mins</b>
+          </div>
+          <div>
+            <small>ENTRY TIMESTAMP</small>
+            <b id="bill-modal-entry">18 Oct 2026, 08:00 AM</b>
+          </div>
+          <div>
+            <small>EXIT TIMESTAMP</small>
+            <b id="bill-modal-exit">18 Oct 2026, 08:45 AM</b>
+          </div>
+        </div>
+        <div style="padding: 15px 0; border-top: 1px dashed #dbe2e8; display: flex; align-items: center; justify-content: space-between;">
+          <span class="eyebrow">TOTAL AMOUNT PAID:</span>
+          <span class="fee large" id="bill-modal-fee">₹30</span>
+        </div>
+        <div class="ticket-actions">
+          <button class="button primary" onclick="window.print()">🖨 Print Bill Receipt</button>
+          <button class="button outline" onclick="closeBillModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{const reg=document.querySelector('#reg_no');if(reg)reg.addEventListener('input',()=>{const p=reg.selectionStart;reg.value=reg.value.toUpperCase();reg.setSelectionRange(p,p)});document.querySelectorAll('[data-confirm]').forEach(el=>el.addEventListener('click',e=>{if(!confirm(el.dataset.confirm))e.preventDefault()}));});
