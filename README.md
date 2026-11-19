@@ -1,164 +1,116 @@
 # 🅿️ Parking Management System
 
-A full-featured, web-based parking lot management application built with **Flask** and deployable to **Firebase / Docker**. It enables parking attendants to park vehicles, issue tickets, process checkouts with auto-calculated fees, search records, and generate reports — all from a clean browser UI.
+> **A real-time, web-based multi-zone parking lot management and ticketing platform built with Flask, Jinja2, and Firebase.**
+
+Parkline Parking is a full-featured automated parking operations system designed for commercial parking complexes, valet stations, and municipal garages. It manages multi-tier vehicle parking, generates sequential entry tickets, calculates dynamic time-based fees with daily rate caps, monitors real-time bay occupancy, and exports revenue reports.
 
 ---
 
-## 📋 Description
+## 📖 About the Project
 
-**Parkline Parking** is a real-time parking management system that tracks vehicle entry and exit across three zones: Bikes, Cars, and Trucks. It automatically assigns slots, generates sequentially numbered tickets, computes time-based fees with daily rate caps, and maintains a full session history. The app ships with a reproducible fictional demo dataset and can be reset to an empty lot at any time.
+### 🎯 Problem Statement
+Manual parking facilities suffer from human ticketing errors, revenue leakage, lack of real-time bay occupancy visibility, and slow checkout queues during peak hours. Attendants often struggle to accurately calculate duration-based tiered tariffs and track vehicles across different category zones (Bikes, Cars, Commercial Trucks).
+
+### 💡 The Solution
+Parkline Parking delivers a clean, browser-based command dashboard that automates the entire vehicle lifecycle from entry gate to checkout booth. On entry, attendants record vehicle details and receive sequentially numbered tickets with assigned slots. The automated billing engine tracks parking duration down to the minute, applies transparent rate tiers with grace periods and daily caps, generates printable receipts, and logs historical sessions into searchable records and exportable financial audits.
+
+### 🌟 Core Value Proposition
+- **Automated Tariff Calculation**: Eliminates calculation errors with vehicle-specific hourly increments, initial grace periods, and daily maximum caps.
+- **Visual Slot Allocation**: Real-time visual slot grid indicating availability and occupancy across Bikes, Cars, and Trucks.
+- **Fast Checkout & Billing**: Instant checkout modal with printable receipts detailing entry/exit timestamps and itemized charges.
+- **Operational Auditing**: Filterable session logs, revenue reports by date, and one-click CSV financial exports.
 
 ---
 
 ## ✨ Features
 
-- 🚗 **Multi-zone Slot Management** — Dedicated zones for Bikes (5 slots), Cars (6 slots), and Trucks (2 slots)
-- 🎫 **Auto Ticket Generation** — Sequential ticket numbers (starting at #1001) assigned on entry
-- 💰 **Dynamic Fee Calculation** — Time-based billing with per-vehicle-type rates, hourly increments, and daily caps
-  - Bike: ₹10 first hour, ₹5/hr after, ₹60 daily cap
-  - Car: ₹30 first hour, ₹20/hr after, ₹200 daily cap
-  - Truck: ₹60 first hour, ₹40/hr after, ₹400 daily cap
-  - Free for stays ≤ 10 minutes
-- 📊 **Live Dashboard** — Active vehicles, recent activity, occupancy summary, and revenue at a glance
-- 🗺️ **Interactive Parking Map** — Visual slot grid with filter by zone or availability status
-- 🔍 **Vehicle Search** — Search active and historical records by registration number, owner name, or ticket number
-- 🧾 **Checkout & Billing** — Confirm checkout with printed bill showing full session details
-- 📜 **Session History** — Filterable history log by vehicle type, registration, or exit date
-- 📈 **Daily Reports** — Per-day session counts and revenue breakdown by vehicle type
-- 📤 **CSV Export** — Download complete parking history as a CSV file
-- 🔄 **Demo Reset** — Load a reproducible fictional dataset (5 active, 3 completed, ₹470 revenue)
-- 🐳 **Docker Ready** — Production-grade Dockerfile using `gunicorn`
-- ☁️ **Firebase Deployable** — Firebase Hosting + Cloud Functions (2nd Gen) entrypoint included
+- 🚗 **Multi-Zone Slot Management** — Dedicated zones with capacity tracking for Bikes (5 slots), Cars (6 slots), and Trucks (2 slots).
+- 🎫 **Automated Ticket Generation** — Sequential entry tickets (starting at #1001) with vehicle details and entry timestamps.
+- 💰 **Dynamic Hourly Fee Calculation** — Tiered pricing with grace periods (free under 10 minutes) and daily maximum limits:
+  - **Bikes**: ₹10 for the 1st hour, ₹5/hr thereafter, ₹60 daily cap.
+  - **Cars**: ₹30 for the 1st hour, ₹20/hr thereafter, ₹200 daily cap.
+  - **Trucks**: ₹60 for the 1st hour, ₹40/hr thereafter, ₹400 daily cap.
+- 📊 **Real-Time Operational Dashboard** — Live KPIs showing current occupied bays, total parked vehicles, recent gate transactions, and daily revenue.
+- 🗺️ **Interactive Slot Map** — Visual bay status grid with zone and availability filtering.
+- 🔍 **Universal Vehicle Search** — Rapid search by vehicle registration number, ticket ID, or owner name across active and historical sessions.
+- 🧾 **Digital Checkout & Bill Printing** — Instant receipt generator displaying session summary, duration, and final bill amount.
+- 📈 **Daily Reports & Analytics** — Day-by-day revenue breakdown and volume analytics by vehicle category.
+- 📥 **CSV Financial Export** — Download complete parking session histories as structured CSV files.
+- 🐳 **Containerized & Cloud Ready** — Includes production-grade Dockerfile with Gunicorn and Firebase Hosting integration.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer       | Technology                          |
-|-------------|-------------------------------------|
-| Backend     | Python 3.11+, Flask ≥ 3.0           |
-| Templating  | Jinja2 (HTML templates)             |
-| Frontend    | HTML5, CSS3, Vanilla JavaScript     |
-| Cloud       | Firebase Hosting, Firebase Admin SDK, Firebase Cloud Functions |
-| Containerization | Docker, Gunicorn               |
-| Testing     | Python `unittest`                   |
+| Layer | Technology |
+|---|---|
+| **Backend Framework** | Python 3.11+, Flask ≥ 3.0 |
+| **Templating Engine** | Jinja2 (HTML5 / Bootstrap styling) |
+| **Styling & UI** | Custom CSS3 + Bootstrap 5 |
+| **Database & Cloud** | Firebase Admin SDK / Firestore / In-Memory Demo Engine |
+| **Server Runtime** | Gunicorn (Production WSGI) |
+| **Containerization** | Docker, Dockerfile |
 
 ---
 
 ## 📁 Folder Structure
 
 ```
-Parking Management/
-├── app.py                  # Flask application & route handlers
-├── parking_logic.py        # Core parking logic (slots, fees, history)
-├── demo_data.py            # Reproducible fictional demo dataset
-├── main.py                 # Firebase Cloud Functions entrypoint
-├── requirements.txt        # Python dependencies
-├── Dockerfile              # Docker production image
-├── firebase.json           # Firebase Hosting & Firestore config
-├── firestore.rules         # Firestore security rules
-├── database.rules.json     # Realtime Database security rules
-├── templates/              # Jinja2 HTML templates
-│   ├── base.html
-│   ├── dashboard.html
-│   ├── parking_map.html
-│   ├── park.html
-│   ├── ticket.html
-│   ├── checkout.html
-│   ├── bill.html
-│   ├── search.html
-│   ├── history.html
-│   └── reports.html
-├── static/                 # CSS & JS assets (Flask serving)
-│   ├── css/style.css
-│   └── js/
-│       ├── app.js
-│       └── firebase-config.js
-├── public/                 # Firebase Hosting public folder
-│   ├── index.html
-│   └── static/
-└── tests/
-    └── test_parking.py     # Unit tests for parking logic
+Parking-Management/
+├── public/                     # Static assets and compiled front-end files
+├── static/                     # CSS stylesheets, client-side JS, Firebase config
+├── templates/                  # Jinja2 HTML views (dashboard, ticket, checkout, reports)
+├── tests/                      # Unit test suite for parking tariff logic
+├── app.py                      # Flask application factory, routes, and API endpoints
+├── demo_data.py                # Reproducible demo dataset generator
+├── Dockerfile                  # Container definition for production deployment
+├── firebase.json               # Firebase deployment configuration
+├── main.py                     # Cloud Functions / server entrypoint
+├── parking_logic.py            # Tariff engine and slot management algorithms
+├── requirements.txt            # Python dependencies
+└── README.md                   # Project documentation
 ```
 
 ---
 
-## 🚀 Installation & Running
+## 🚀 How to Install and Run
 
 ### Prerequisites
+- [Python](https://www.python.org/) (v3.10+) & `pip`
 
-- Python 3.11+
-- pip
-
-### 1. Clone the repository
-
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/karthiban3333-maker/Parking-Management.git
 cd Parking-Management
 ```
 
-### 2. Create and activate a virtual environment
-
+### 2. Create Virtual Environment & Install Dependencies
 ```bash
-# Windows
-python -m venv .venv
-.venv\Scripts\activate
+python -m venv venv
+# On Windows:
+.\venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
 
-# macOS / Linux
-python -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the app locally
+### 3. Configure Environment Variables
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
 
+### 4. Run the Application
 ```bash
 python app.py
 ```
+Visit `http://localhost:5000` in your browser.
 
-Open your browser at **http://localhost:5000**
-
----
-
-### 🐳 Run with Docker
-
+### 5. Running with Docker
 ```bash
 docker build -t parking-management .
 docker run -p 8080:8080 parking-management
-```
-
-Open your browser at **http://localhost:8080**
-
----
-
-### ☁️ Deploy to Firebase
-
-```bash
-# Install Firebase CLI if not already installed
-npm install -g firebase-tools
-
-# Login and deploy
-firebase login
-firebase deploy
-```
-
----
-
-## 🧪 Running Tests
-
-```bash
-python -m pytest tests/
-```
-
-or
-
-```bash
-python -m unittest discover tests/
 ```
 
 ---
@@ -169,6 +121,12 @@ python -m unittest discover tests/
 
 ---
 
-## 👤 Author
+## 📄 License
+
+This project is private and proprietary. All rights reserved.
+
+---
+
+## 👨‍💻 Author
 
 **Karthiban A** — [Kode Prime](https://github.com/karthiban3333-maker)
